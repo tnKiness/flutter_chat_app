@@ -1,4 +1,6 @@
 // lib/presentation/screens/auth_screen.dart
+import 'dart:io';
+import 'package:chat_app/presentation_layered/auth/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/business_layered/auth/auth_controller.dart';
 
@@ -16,10 +18,14 @@ class _AuthScreenState extends State<AuthScreen> {
   var _isLogin = true;
   var _enteredEmail = '';
   var _enteredPassword = '';
+  File? _selectedImage;
 
   void _submit() async {
     final isValid = _form.currentState!.validate();
-    if (!isValid) return;
+    if (!isValid || !_isLogin && _selectedImage == null) {
+      return;
+    }
+
     _form.currentState!.save();
 
     await _authController.submitAuth(
@@ -57,6 +63,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (!_isLogin)
+                            UserImagePicker(
+                              onPickImage: (pickedIage) {
+                                _selectedImage = pickedIage;
+                              },
+                            ),
                           TextFormField(
                             decoration: const InputDecoration(
                               labelText: 'Email Address',
