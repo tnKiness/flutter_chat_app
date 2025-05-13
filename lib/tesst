@@ -32,6 +32,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (!isValid || !_isLogin && _selectedImage == null) {
       // show error message ...
+      if (_selectedImage == null && !_isLogin) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please pick an image.')),
+        );
+      }
       return;
     }
 

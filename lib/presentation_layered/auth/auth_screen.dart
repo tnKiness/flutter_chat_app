@@ -18,22 +18,42 @@ class _AuthScreenState extends State<AuthScreen> {
   var _isLogin = true;
   var _enteredEmail = '';
   var _enteredPassword = '';
+  var _enteredUsername = '';
   File? _selectedImage;
+  var _isAuthenticating = false;
 
   void _submit() async {
     final isValid = _form.currentState!.validate();
     if (!isValid || !_isLogin && _selectedImage == null) {
+      //throw error message
       return;
     }
 
     _form.currentState!.save();
 
-    await _authController.submitAuth(
-      email: _enteredEmail,
-      password: _enteredPassword,
-      isLogin: _isLogin,
-      context: context,
-    );
+    setState(() {
+      _isAuthenticating = true;
+    });
+
+    if (_isLogin) {
+      await _authController.signIn(
+        email: _enteredEmail,
+        password: _enteredPassword,
+        context: context,
+      );
+    } else {
+      await _authController.signUp(
+        email: _enteredEmail,
+        password: _enteredPassword,
+        username: _enteredUsername,
+        imageFile: _selectedImage!,
+        context: context,
+      );
+    }
+
+    setState(() {
+      _isAuthenticating = false;
+    });
   }
 
   @override
@@ -46,15 +66,17 @@ class _AuthScreenState extends State<AuthScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                margin: const EdgeInsets.symmetric(
-                  vertical: 30,
-                  horizontal: 20,
+                margin: const EdgeInsets.only(
+                  top: 20,
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
                 ),
                 width: 200,
                 child: Image.asset('assets/images/chat.png'),
               ),
               Card(
-                margin: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(16),
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -65,8 +87,8 @@ class _AuthScreenState extends State<AuthScreen> {
                         children: [
                           if (!_isLogin)
                             UserImagePicker(
-                              onPickImage: (pickedIage) {
-                                _selectedImage = pickedIage;
+                              onPickImage: (pickedImage) {
+                                _selectedImage = pickedImage;
                               },
                             ),
                           TextFormField(
@@ -82,10 +104,31 @@ class _AuthScreenState extends State<AuthScreen> {
                                   !value.contains('@')) {
                                 return 'Please enter a valid email address.';
                               }
+
                               return null;
                             },
-                            onSaved: (value) => _enteredEmail = value!,
+                            onSaved: (value) {
+                              _enteredEmail = value!;
+                            },
                           ),
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Username',
+                              ),
+                              enableSuggestions: false,
+                              validator: (value) {
+                                if (value == null ||
+                                    value.isEmpty ||
+                                    value.trim().length < 4) {
+                                  return 'Please enter at least 4 characters.';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) {
+                                _enteredUsername = value!;
+                              },
+                            ),
                           TextFormField(
                             decoration: const InputDecoration(
                               labelText: 'Password',
@@ -97,31 +140,37 @@ class _AuthScreenState extends State<AuthScreen> {
                               }
                               return null;
                             },
-                            onSaved: (value) => _enteredPassword = value!,
+                            onSaved: (value) {
+                              _enteredPassword = value!;
+                            },
                           ),
                           const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
+                          if (_isAuthenticating)
+                            const CircularProgressIndicator(),
+                          if (!_isAuthenticating)
+                            ElevatedButton(
+                              onPressed: _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
+                              ),
+                              child: Text(_isLogin ? 'Login' : 'Signup'),
                             ),
-                            child: Text(_isLogin ? 'Login' : 'Signup'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _isLogin = !_isLogin;
-                              });
-                            },
-                            child: Text(
-                              _isLogin
-                                  ? 'Create an account'
-                                  : 'I already have an account',
+                          if (!_isAuthenticating)
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isLogin = !_isLogin;
+                                });
+                              },
+                              child: Text(
+                                _isLogin
+                                    ? 'Create an account'
+                                    : 'I already have an account',
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
