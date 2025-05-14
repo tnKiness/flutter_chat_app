@@ -9,8 +9,8 @@ class FirebaseAuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CloudinaryPublic _cloudinary = CloudinaryPublic(
-    'YOUR_CLOUD_NAME',
-    'YOUR_UPLOAD_PRESET',
+    'dv7cjzb7h',
+    'chat_app',
     cache: false,
   );
 
